@@ -1,0 +1,94 @@
+{
+  "projectType": "frontend",
+  "projectName": "VShop",
+  "projectDescription": "A React Native mobile app for Valorant players to check their in-game shop, Night Market, bundles, accessories, profile stats, and wishlist notifications — all running securely on-device.",
+  "theme": "almond",
+  "primaryColor": "#040404",
+  "lightColor": null,
+  "darkColor": "#040404",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "getting-started/installation", "getting-started/setup"]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/shop",
+              "features/night-market",
+              "features/bundles",
+              "features/accessories",
+              "features/profile",
+              "features/wishlist"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": ["configuration/environment", "configuration/localization"]
+          },
+          {
+            "group": "Contributing",
+            "pages": ["contributing/overview", "contributing/translations"]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "API Utilities",
+            "pages": [
+              "reference/valorant-api",
+              "reference/vshop-api",
+              "reference/valorant-assets",
+              "reference/wishlist"
+            ]
+          },
+          {
+            "group": "State Management",
+            "pages": [
+              "reference/use-user-store",
+              "reference/use-wishlist-store",
+              "reference/use-feature-store"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Daily skin shop viewer with countdown timer",
+    "Night Market discounted skin browser",
+    "Featured bundle viewer",
+    "Accessory shop (buddies, cards, sprays, titles)",
+    "Player profile with level, XP, and currency balances",
+    "Wishlist with background notifications (donator feature)",
+    "Secure on-device authentication via Riot Games SSO",
+    "Multi-language support via i18next and Weblate",
+    "Stripe-powered donation/supporter system"
+  ],
+  "publicApiSurface": [
+    "getEntitlementsToken(accessToken)",
+    "getUserId(accessToken)",
+    "getUsername(accessToken, entitlementsToken, userId, region)",
+    "getShop(accessToken, entitlementsToken, region, userId)",
+    "parseShop(shop)",
+    "getBalances(accessToken, entitlementsToken, region, userId)",
+    "getProgress(accessToken, entitlementsToken, region, userId)",
+    "reAuth(version)",
+    "checkDonator(riotId)",
+    "getCurrencies()",
+    "generatePaymentSheet({ amount, riotId, currencyCode })",
+    "checkShop(wishlist)",
+    "initBackgroundFetch()",
+    "stopBackgroundFetch()",
+    "wishlistBgTask()",
+    "useUserStore",
+    "useWishlistStore",
+    "useFeatureStore"
+  ]
+}

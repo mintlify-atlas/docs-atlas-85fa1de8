@@ -1,0 +1,88 @@
+---
+title: "Localization"
+description: "How VShop handles multiple languages and maps them to Valorant API locale codes."
+---
+
+VShop uses [i18next](https://www.i18next.com/) with [react-i18next](https://react.i18next.com/) for all user-facing strings. Translation files live under `assets/i18n/` as JSON files and are bundled into the app at build time.
+
+## Supported locales
+
+| Code | Language | Valorant API code |
+|------|----------|-------------------|
+| `ar` | Arabic | `ar-AE` |
+| `de` | German | `de-DE` |
+| `en` | English | `en-US` |
+| `es` | Spanish | `es-ES` |
+| `fr` | French | `fr-FR` |
+| `it` | Italian | `it-IT` |
+| `jp` | Japanese | `ja-JP` |
+| `ko` | Korean | `ko-KR` |
+| `no` | Norwegian | `en-US` \* |
+| `pl` | Polish | `pl-PL` |
+| `pt` | Portuguese | `pt-BR` |
+| `ru` | Russian | `ru-RU` |
+| `ta` | Tamil | `en-US` \* |
+| `th` | Thai | `th-TH` |
+| `tr` | Turkish | `tr-TR` |
+| `uk` | Ukrainian | `vi-VN` \* |
+| `vi` | Vietnamese | `vi-VN` |
+| `zh-Hans` | Chinese (Simplified) | `zh-CN` |
+| `zh-Hant` | Chinese (Traditional) | `zh-TW` |
+
+<Note>
+  Locales marked with \* fall back to a different Valorant API code because the official Valorant API does not provide a matching locale for that language. App strings are still shown in the user's language; only in-game asset names and descriptions are returned in the fallback language.
+</Note>
+
+## i18next configuration
+
+The i18next instance is initialized in `utils/localization.ts` with the following options:
+
+```ts
+i18n
+  .use(langDetector)     // custom AsyncStorage-based detector
+  .use(initReactI18next) // binds i18n to React
+  .init({
+    resources,           // all translation files imported statically
+    compatibilityJSON: "v3",
+    fallbackLng: "en",   // fall back to English for missing keys
+    debug: __DEV__,      // log missing keys in development
+    react: {
+      useSuspense: false,
+    },
+    interpolation: {
+      escapeValue: false, // React already escapes output
+    },
+  });
+```
+
+All translation resources are imported at the top of the file and registered statically — there is no lazy loading. This keeps startup simple at the cost of a slightly larger bundle.
+
+## Language detection
+
+A custom `languageDetector` plugin reads and writes the selected language via [AsyncStorage](https://react-native-async-storage.github.io/async-storage/):
+
+1. On startup, it calls `AsyncStorage.getItem("language")`.
+2. If a stored value exists, that language code is used immediately.
+3. If no value is stored (first launch), it reads the device locale via `expo-localization`'s `getLocales()[0].languageCode` and defaults to `"en"` if that is unavailable.
+4. Whenever the user picks a new language, `AsyncStorage.setItem("language", language)` persists the choice for future launches.
+
+## Changing the app language
+
+Users change the language from the **Settings** screen. Selecting a language calls i18next's `i18n.changeLanguage(code)`, which also triggers `cacheUserLanguage` to persist the value in AsyncStorage. The UI re-renders immediately because all components subscribe to i18next via the `useTranslation` hook.
+
+## `getVAPILang()` utility
+
+```ts
+export const getVAPILang = () => {
+  const translation = resources[i18n.language as keyof typeof resources];
+  return translation ? translation.VAPILangCode : "en-US";
+};
+```
+
+This function is called whenever the app fetches data from the Valorant API (via [valorant-api.com](https://valorant-api.com)). It maps the active i18next language code to the corresponding Valorant API locale string, so skin names, bundle titles, and other in-game text are returned in the closest available language. If the current language has no matching VAPI code it falls back to `"en-US"`.
+
+## Weblate integration
+
+Community translations are managed through [Weblate](https://hosted.weblate.org/projects/vshop/mobile/). Weblate opens pull requests against the repository whenever translators submit or update strings, keeping translation files in sync automatically.
+
+To contribute a translation, see the [Translations](/contributing/translations) page.

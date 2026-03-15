@@ -1,0 +1,35 @@
+---
+title: 'Introduction'
+description: 'VShop is an open-source React Native app for viewing your Valorant store, Night Market, bundles, accessories, and profile — entirely on your device.'
+---
+
+VShop lets you check everything in your Valorant account without opening the game. It runs entirely on your device and communicates directly with Riot Games servers — no third-party backend is ever involved.
+
+<Note>
+  VShop is not affiliated with, endorsed by, or sponsored by Riot Games. Valorant and all related marks are trademarks of Riot Games, Inc.
+</Note>
+
+## What VShop does
+
+- **Daily shop** — view your rotating skin offers and their prices
+- **Night Market** — check your discounted Night Market offers when active
+- **Bundles** — browse featured bundle contents and pricing
+- **Accessories** — see buddy, spray, player card, and title offers
+- **Profile** — view your account progress, level, and currency balances
+
+## How authentication works
+
+VShop uses a Riot OAuth WebView embedded directly in the app. When you sign in, your credentials are transmitted from your device straight to `auth.riotgames.com` — the same endpoint the official Valorant client uses. VShop never sees, intercepts, or stores your password.
+
+## Open source
+
+VShop is fully open source. The source code is available on [GitHub](https://github.com/VShopApp/mobile). An Android APK is available for direct download from GitHub Releases — no app store required.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/getting-started/installation">
+    Download the Android APK or build from source for Android and iOS.
+  </Card>
+  <Card title="First-time setup" icon="circle-play" href="/getting-started/setup">
+    Select your region, sign in with Riot, and start viewing your shop.
+  </Card>
+</CardGroup>

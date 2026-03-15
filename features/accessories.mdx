@@ -1,0 +1,53 @@
+---
+title: 'Accessory Shop'
+description: 'Browse gun buddies, player cards, sprays, and player titles available for Kingdom Credits in the rotating Accessory Shop.'
+keywords: ['accessories', 'gun buddy', 'player card', 'spray', 'player title', 'kingdom credits', 'KC']
+---
+
+The Accessory Shop offers a rotating selection of non-weapon cosmetics purchasable with **Kingdom Credits (KC)**. It refreshes on the same schedule as the Daily Shop and features up to 4 accessory items at a time.
+
+A countdown timer in the top-right corner shows when the current accessory offers expire.
+
+## Accessory types
+
+The Accessory Shop can contain four different types of cosmetics. Each type is displayed differently in VShop:
+
+<Tabs>
+  <Tab title="Gun buddies">
+    Gun buddies are small charms that attach to your weapon. They are displayed with a small icon image.
+
+    VShop shows the buddy's display icon sourced from the buddy level's `displayIcon` field.
+  </Tab>
+  <Tab title="Player cards">
+    Player cards are the banner artwork shown on your profile and in loading screens. They are displayed with their large art format.
+
+    VShop renders player cards using the `largeArt` field, giving you a clear preview of the full card design.
+  </Tab>
+  <Tab title="Sprays">
+    Sprays are graphics you can apply to surfaces in-game. They are displayed using the full transparent icon.
+
+    VShop shows sprays using the `fullTransparentIcon` field.
+  </Tab>
+  <Tab title="Player titles">
+    Player titles are short text strings displayed beneath your name. Because they are text-only, no image is shown.
+
+    VShop displays the title's display name as a text card with no artwork.
+  </Tab>
+</Tabs>
+
+## Pricing
+
+All accessory items are priced in **Kingdom Credits (KC)**, not Valorant Points. The price is shown on each item card next to the KC currency icon.
+
+## Data source
+
+Accessory data comes from the `AccessoryStore.AccessoryStoreOffers` field in the Riot storefront API response. Prices use the `KC` currency from each offer's `Cost` field. The reset timer is sourced from `AccessoryStoreRemainingDurationInSeconds`.
+
+<CardGroup cols={2}>
+  <Card title="Daily Shop" icon="store" href="/features/shop">
+    View your 4 daily skin offers priced in Valorant Points.
+  </Card>
+  <Card title="Profile" icon="user" href="/features/profile">
+    Check your Kingdom Credits balance and other currency totals.
+  </Card>
+</CardGroup>

@@ -1,0 +1,119 @@
+---
+title: "useWishlistStore"
+description: "Zustand store for wishlist and notification preferences (persisted to AsyncStorage)"
+---
+
+`useWishlistStore` is a persisted [Zustand](https://github.com/pmndrs/zustand) store that tracks the user's wishlisted skin UUIDs and their background shop-check notification preference. State is serialized to JSON and saved under the `"wishlist"` key in React Native's `AsyncStorage`.
+
+## Interface
+
+```typescript
+interface WishlistState {
+  notificationEnabled: boolean;
+  setNotificationEnabled: (value: boolean) => void;
+  skinIds: string[];
+  toggleSkin: (uuid: string) => void;
+}
+```
+
+## State
+
+<ResponseField name="notificationEnabled" type="boolean" required>
+  Whether background shop-check notifications are enabled. Defaults to `false`.
+
+  When `true`, a background fetch task runs periodically and fires a notification if any wishlisted skin appears in the daily shop.
+</ResponseField>
+
+<ResponseField name="skinIds" type="string[]" required>
+  Array of wishlisted skin UUIDs. Defaults to `[]`.
+
+  Each entry is the UUID of a skin level (`skin.levels[0].uuid`). The background check compares these IDs against the current daily shop.
+</ResponseField>
+
+## Actions
+
+<ParamField path="setNotificationEnabled" type="(value: boolean) => void">
+  Sets the `notificationEnabled` flag directly. In practice, use the `toggleNotificationEnabled` pattern in `settings.tsx` which handles permission requests and background fetch initialization before calling this action.
+</ParamField>
+
+<ParamField path="toggleSkin" type="(uuid: string) => void">
+  Adds or removes a skin UUID from the `skinIds` array.
+
+  - If `uuid` is already in `skinIds`, it is removed (filtered out).
+  - If `uuid` is not in `skinIds`, it is appended.
+
+  This is an idempotent toggle — calling it twice with the same UUID returns the array to its original state.
+</ParamField>
+
+## Persistence
+
+The store uses `zustand/middleware`'s `persist` with `createJSONStorage(() => AsyncStorage)`. All state is automatically saved to and rehydrated from `AsyncStorage` under the key `"wishlist"`.
+
+```typescript
+persist(
+  (set, get) => ({ /* ... */ }),
+  {
+    name: "wishlist",
+    storage: createJSONStorage(() => AsyncStorage),
+  }
+)
+```
+
+<Note>
+  Because persistence is async, state may not be available synchronously on the first render. Zustand's `persist` middleware handles rehydration automatically — you do not need to manually read from `AsyncStorage`.
+</Note>
+
+## Usage examples
+
+### Reading wishlist state (settings.tsx)
+
+```typescript
+import { useWishlistStore } from "~/hooks/useWishlistStore";
+
+function Settings() {
+  const notificationEnabled = useWishlistStore(
+    (state) => state.notificationEnabled
+  );
+  const setNotificationEnabled = useWishlistStore(
+    (state) => state.setNotificationEnabled
+  );
+  const wishlistedSkins = useWishlistStore((state) => state.skinIds);
+
+  // ...
+}
+```
+
+### Toggling notifications with permission handling (settings.tsx)
+
+```typescript
+const toggleNotificationEnabled = async () => {
+  if (isDonator) {
+    if (!notificationEnabled) {
+      const permission = await Notifications.requestPermissionsAsync();
+      if (permission.granted) {
+        await initBackgroundFetch();
+        setNotificationEnabled(true);
+      }
+    } else {
+      await stopBackgroundFetch();
+      setNotificationEnabled(false);
+    }
+  } else {
+    showDonatePopup();
+  }
+};
+```
+
+### Clearing wishlist state on logout (settings.tsx)
+
+```typescript
+const handleLogout = async () => {
+  stopBackgroundFetch();
+  setNotificationEnabled(false); // persisted change — survives app restart if not cleared
+  // ...
+};
+```
+
+<Tip>
+  Background shop-check notifications are a donator-only feature. Always check `isDonator` from `useFeatureStore` before calling `setNotificationEnabled(true)`.
+</Tip>

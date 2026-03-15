@@ -1,0 +1,182 @@
+---
+title: "useUserStore"
+description: "Zustand store for authenticated user data"
+---
+
+`useUserStore` is a [Zustand](https://github.com/pmndrs/zustand) store that holds the currently authenticated Riot account's data, including shop contents, currency balances, and account progress. It is initialized with `defaultUser` (all fields empty/zero) and populated after a successful login.
+
+## Interface
+
+```typescript
+interface UserState {
+  user: typeof defaultUser;
+  setUser: (user: typeof defaultUser) => void;
+}
+```
+
+## State
+
+<ResponseField name="user" type="object" required>
+  The authenticated user object. Initialized from `defaultUser` in `~/utils/valorant-api.ts`.
+
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">
+      Riot user ID — the `sub` (subject) UUID decoded from the JWT access token.
+    </ResponseField>
+
+    <ResponseField name="name" type="string">
+      In-game name (`GameName`) returned by the Riot Name Service API.
+    </ResponseField>
+
+    <ResponseField name="region" type="string">
+      Selected region code. One of `"eu"`, `"na"`, `"ap"`, or `"kr"`.
+    </ResponseField>
+
+    <ResponseField name="shops" type="object">
+      Shop data fetched from the Valorant storefront API.
+
+      <Expandable title="properties">
+        <ResponseField name="shops.main" type="SkinShopItem[]">
+          The four daily rotating skin offers.
+        </ResponseField>
+
+        <ResponseField name="shops.bundles" type="BundleShopItem[]">
+          Featured bundle offers currently available in the store.
+        </ResponseField>
+
+        <ResponseField name="shops.nightMarket" type="NightMarketItem[]">
+          Night Market discounted skin offers. Empty array when Night Market is inactive.
+        </ResponseField>
+
+        <ResponseField name="shops.accessory" type="AccessoryShopItem[]">
+          Accessory store items (gun buddies, player cards, sprays, titles).
+        </ResponseField>
+
+        <ResponseField name="shops.remainingSecs" type="object">
+          Countdown seconds until each shop section refreshes.
+
+          <Expandable title="properties">
+            <ResponseField name="remainingSecs.main" type="number">
+              Seconds until the daily skin shop resets.
+            </ResponseField>
+            <ResponseField name="remainingSecs.bundles" type="number[]">
+              Per-bundle countdown seconds. One entry per active bundle.
+            </ResponseField>
+            <ResponseField name="remainingSecs.nightMarket" type="number">
+              Seconds until the Night Market expires. `0` when inactive.
+            </ResponseField>
+            <ResponseField name="remainingSecs.accessory" type="number">
+              Seconds until the accessory shop resets.
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="balances" type="object">
+      Currency wallet balances.
+
+      <Expandable title="properties">
+        <ResponseField name="balances.vp" type="number">
+          VALORANT Points (VP) balance.
+        </ResponseField>
+        <ResponseField name="balances.rad" type="number">
+          Radianite Points (RAD) balance.
+        </ResponseField>
+        <ResponseField name="balances.fag" type="number">
+          Free Agents balance.
+        </ResponseField>
+        <ResponseField name="balances.kc" type="number">
+          Kingdom Credits (KC) balance, used in the accessory shop.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="progress" type="object">
+      Account XP progress.
+
+      <Expandable title="properties">
+        <ResponseField name="progress.level" type="number">
+          Current account level.
+        </ResponseField>
+        <ResponseField name="progress.xp" type="number">
+          Current XP within the active level.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Actions
+
+<ParamField path="setUser" type="(user: typeof defaultUser) => void">
+  Replaces the entire `user` object in the store. Typically called after fetching fresh shop and account data from the Valorant API, or with `defaultUser` on logout to clear all state.
+</ParamField>
+
+## Usage examples
+
+### Reading shop data (shop.tsx)
+
+```typescript
+import { useUserStore } from "~/hooks/useUserStore";
+
+function Shop() {
+  const user = useUserStore((state) => state.user);
+  const timestamp = new Date().getTime() + user.shops.remainingSecs.main * 1000;
+
+  return (
+    <ScrollView>
+      <Countdown timestamp={timestamp} />
+      {user.shops.main.map((item) => (
+        <ShopItem item={item} key={item.uuid} />
+      ))}
+    </ScrollView>
+  );
+}
+```
+
+### Reading profile data (profile.tsx)
+
+```typescript
+import { useUserStore } from "~/hooks/useUserStore";
+
+function Profile() {
+  const user = useUserStore(({ user }) => user);
+
+  return (
+    <ScrollView>
+      <Avatar.Text label={user.name.slice(0, 2).toUpperCase()} />
+      <Text>{user.name}</Text>
+
+      <List.Item title="Region" description={user.region} />
+      <List.Item title="Level" description={user.progress.level} />
+      <List.Item title="XP" description={user.progress.xp} />
+
+      <List.Item title="VP" description={user.balances.vp.toString()} />
+      <List.Item title="RAD" description={user.balances.rad.toString()} />
+      <List.Item title="KC" description={user.balances.kc.toString()} />
+      <List.Item title="Free Agents" description={user.balances.fag.toString()} />
+    </ScrollView>
+  );
+}
+```
+
+### Resetting state on logout (settings.tsx)
+
+```typescript
+import { useUserStore } from "~/hooks/useUserStore";
+import { defaultUser } from "~/utils/valorant-api";
+
+const { setUser } = useUserStore();
+
+const handleLogout = async () => {
+  await CookieManager.clearAll(true);
+  await AsyncStorage.removeItem("region");
+  setUser(defaultUser); // resets all user data to empty/zero defaults
+  router.replace("/setup");
+};
+```
+
+<Note>
+  `useUserStore` is not persisted. All user data is re-fetched from the Valorant API on every app session. To clear user state, pass `defaultUser` to `setUser`.
+</Note>

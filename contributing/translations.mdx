@@ -1,0 +1,58 @@
+---
+title: "Translations"
+description: "Help translate VShop into your language via Weblate."
+---
+
+All VShop translations are community-contributed and managed through [Weblate](https://hosted.weblate.org/projects/vshop/mobile/). You do not need to clone the repository or open a pull request manually — Weblate handles everything through its web interface and automatically syncs approved translations back to the codebase.
+
+<Note>
+  Translation files live in `assets/i18n/` as JSON files. Weblate opens pull requests against the repository whenever strings are updated, so changes appear in the next release automatically.
+</Note>
+
+## How to contribute a translation
+
+<Steps>
+  <Step title="Open the VShop project on Weblate">
+    Go to [hosted.weblate.org/projects/vshop/mobile/](https://hosted.weblate.org/projects/vshop/mobile/) and sign in (or create a free account).
+  </Step>
+
+  <Step title="Select your language">
+    Click on the component list and choose your target language. If your language is not listed, use the **Start new translation** button to request it.
+  </Step>
+
+  <Step title="Translate or review strings">
+    Weblate shows each source string (English) alongside its current translation. You can:
+    - Translate untranslated strings.
+    - Suggest corrections to existing translations.
+    - Vote on suggestions made by other contributors.
+  </Step>
+
+  <Step title="Submit your changes">
+    Click **Save** after each string. Weblate batches approved translations and opens a pull request to the repository — no Git workflow required on your end.
+  </Step>
+</Steps>
+
+## Tips for translators
+
+<CardGroup cols={2}>
+  <Card title="Keep placeholders intact" icon="brackets-curly">
+    Strings may contain interpolation tokens like `{{name}}` or `{{count}}`. Copy them exactly into your translation — do not translate the token names.
+  </Card>
+  <Card title="Match the tone" icon="message">
+    VShop uses a casual, friendly tone. Prefer natural phrasing over literal word-for-word translations.
+  </Card>
+  <Card title="Check the context" icon="eye">
+    Weblate shows a screenshot or description for many strings. Use it to understand where the text appears before translating.
+  </Card>
+  <Card title="Ask for help" icon="circle-question">
+    If a string is unclear, leave a comment on Weblate. The maintainers monitor comments and will clarify.
+  </Card>
+</CardGroup>
+
+## Supported languages
+
+For the full list of supported locales and their corresponding Valorant API language codes, see the [Localization](/configuration/localization) page.
+
+## Credits
+
+All translators are credited on the [VShop credits page](https://vshop.one/credits). Thank you to everyone who has contributed!

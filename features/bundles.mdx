@@ -1,0 +1,44 @@
+---
+title: 'Featured Bundles'
+description: 'Browse the current featured weapon skin bundles, including bundle artwork, individual item prices, and the bundle countdown timer.'
+keywords: ['bundles', 'featured bundle', 'skins', 'VP', 'valorant points', 'bundle price']
+---
+
+The Featured Bundles screen shows the weapon skin bundles currently available in the Valorant store. Bundles group multiple skins (and sometimes other cosmetics) together, often at a discount compared to buying items individually.
+
+## What you see
+
+Each bundle displays:
+
+- **Bundle artwork** — a full-width banner image representing the bundle's visual theme
+- **Bundle name and total price** — the combined discounted price for all items in the bundle (in VP)
+- **Countdown timer** — shows how long the bundle is available before it rotates out
+- **Individual skin cards** — each weapon skin included in the bundle is listed separately
+
+Each individual skin card within a bundle shows:
+
+- **Skin name**
+- **Separate purchase price** — the VP cost if you were to buy this skin outside the bundle
+- **Skin artwork**
+- **Levels and Chromas buttons** — tap to preview upgrade levels and color variants
+
+## Bundle pricing
+
+The total bundle price shown is calculated as the sum of all individual items' discounted prices (`DiscountedPrice`) from the Riot API. The per-item price displayed on each card is the base price (`BasePrice`) — what the item costs when purchased separately.
+
+<Note>
+Only weapon skin levels (`SkinLevel` item type) are shown in the bundle item list. Other cosmetic types included in a bundle (such as gun buddies or player cards) are not individually listed.
+</Note>
+
+## Data source
+
+Bundle data comes from the `FeaturedBundle.Bundles` field in the Riot storefront API response. Bundle artwork and metadata are fetched from the Valorant assets API using the bundle's `DataAssetID`. The per-bundle countdown uses `DurationRemainingInSeconds`.
+
+<CardGroup cols={2}>
+  <Card title="Daily Shop" icon="store" href="/features/shop">
+    View your 4 daily rotating skin offers.
+  </Card>
+  <Card title="Accessory Shop" icon="tag" href="/features/accessories">
+    Browse gun buddies, player cards, sprays, and titles for Kingdom Credits.
+  </Card>
+</CardGroup>

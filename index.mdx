@@ -1,97 +1,63 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "VShop Documentation"
+description: "Check your Valorant game shop with ease. VShop runs entirely on your device and securely transmits your credentials directly to Riot Games servers."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/getting-started/installation">
+    Build and install VShop on your Android or iOS device.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Setup" icon="gear" href="/getting-started/setup">
+    Configure your region and sign in with your Riot account.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Features" icon="stars" href="/features/shop">
+    Explore the shop, Night Market, bundles, and more.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Contributing" icon="code-branch" href="/contributing/overview">
+    Help improve VShop by contributing code or translations.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What is VShop?
 
-Everything you need to create world-class documentation.
+VShop is an open-source React Native mobile app that lets Valorant players browse their daily skin shop, Night Market, featured bundles, and accessory store — all without opening the game client. It runs entirely on your device and communicates directly with Riot Games' official servers.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Note>
+  VShop is not endorsed by Riot Games in any way. Riot Games, Valorant, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+</Note>
 
-## Need inspiration?
+## Key features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={3}>
+  <Card title="Daily Shop" icon="store" href="/features/shop">
+    View your 4 daily skin offers with prices and countdown timer.
+  </Card>
+  <Card title="Night Market" icon="moon" href="/features/night-market">
+    Browse discounted skins when the Night Market is active.
+  </Card>
+  <Card title="Bundles" icon="layer-group" href="/features/bundles">
+    See featured bundles with all included items and total price.
+  </Card>
+  <Card title="Accessories" icon="tag" href="/features/accessories">
+    Shop for gun buddies, player cards, sprays, and titles.
+  </Card>
+  <Card title="Profile" icon="user" href="/features/profile">
+    Track your level, XP, VP, Radianite, and Kingdom Credits.
+  </Card>
+  <Card title="Wishlist" icon="bell" href="/features/wishlist">
+    Get notified when wishlisted skins appear in your shop.
+  </Card>
+</CardGroup>
+
+## Privacy & security
+
+VShop authenticates directly with Riot Games' official OAuth servers — your credentials never touch any third-party server. Authentication tokens are stored exclusively on-device using secure cookie storage.
+
+<CardGroup cols={2}>
+  <Card title="Privacy Policy" icon="shield-halved" href="https://vshop.one/privacy">
+    Read VShop's full privacy policy.
+  </Card>
+  <Card title="Security docs" icon="lock" href="https://docs.vshop.one/security">
+    Learn how credentials are handled securely.
+  </Card>
+</CardGroup>

@@ -1,0 +1,71 @@
+---
+title: 'Wishlist & Notifications'
+description: 'Add skins to your wishlist and receive automatic notifications when they appear in your daily shop.'
+keywords: ['wishlist', 'notifications', 'background fetch', 'donator', 'skin alerts']
+---
+
+The wishlist lets you bookmark weapon skins you want to buy. When a wishlisted skin appears in your daily shop rotation, VShop can send you a local notification — so you never miss a skin you have been waiting for.
+
+<Note>
+Wishlist notifications are a **donator perk**. You must be a donator to enable background notifications. Adding skins to the wishlist and seeing the star indicator in the shop is available to all users.
+</Note>
+
+## How the wishlist works
+
+Skins you add to the wishlist are stored locally on your device (persisted via `AsyncStorage`). The wishlist state is identified by skin level UUIDs.
+
+In the Daily Shop, any skin that is on your wishlist is highlighted with a star (`⭐`) prefix on its name, so you can instantly see when a wishlisted skin has appeared.
+
+## How notifications work
+
+When notifications are enabled, a background task runs once daily on Android. The task:
+
+1. Fetches your current daily shop from Riot's API
+2. Compares the shop's skin UUIDs against your saved wishlist
+3. If any wishlisted skin is in the shop, sends a local push notification to your device
+
+This check happens automatically in the background — you do not need to open VShop for it to run.
+
+<Warning>
+Background fetch notifications are only available on **Android**. The notification toggle does not appear on iOS.
+</Warning>
+
+## Enabling notifications
+
+<Steps>
+  <Step title="Open Settings">
+    Tap the Settings icon in the app navigation to open the Settings screen.
+  </Step>
+  <Step title="Enable wishlist notifications">
+    Under the **General** section, tap **Wishlist notifications**. If you are not a donator, you will be prompted with the donator unlock screen.
+  </Step>
+  <Step title="Grant notification permission">
+    VShop will request notification permission from your device. Tap **Allow** to grant it. If you deny permission, the background check will be scheduled but notifications cannot be delivered — you will see a toast message confirming the permission was not granted.
+  </Step>
+  <Step title="Notifications active">
+    Once enabled, the checkbox next to **Wishlist notifications** will be checked. The background task is now scheduled to run daily and will notify you whenever a wishlisted skin appears in your shop.
+  </Step>
+</Steps>
+
+## Disabling notifications
+
+Tap **Wishlist notifications** again in Settings to uncheck it. The background task is stopped and no further notifications will be sent.
+
+Notifications are also automatically disabled when you log out.
+
+## Checking the last background run
+
+You can long-press the **Wishlist notifications** row in Settings to see a toast message showing how long ago the background task last ran (e.g. "Last checked: 3 hours ago" or "Never checked").
+
+## Battery optimization
+
+On some Android devices, aggressive battery optimization can prevent background tasks from running reliably. If you notice notifications are not arriving, check that VShop is excluded from battery optimization in your device's settings.
+
+<CardGroup cols={2}>
+  <Card title="Daily Shop" icon="store" href="/features/shop">
+    See wishlisted skins highlighted with a star in your daily offers.
+  </Card>
+  <Card title="Profile" icon="user" href="/features/profile">
+    View your account info and currency balances.
+  </Card>
+</CardGroup>

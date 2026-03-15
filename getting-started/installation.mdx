@@ -1,0 +1,93 @@
+---
+title: 'Installation'
+description: 'Install VShop on Android via direct APK download, or build from source for Android or iOS.'
+---
+
+There are two ways to install VShop: download the pre-built Android APK, or build the app from source.
+
+## Android APK
+
+The easiest way to get VShop on Android is to download the APK directly from GitHub Releases.
+
+1. Download the APK from [github.com/VShopApp/mobile/releases/latest/download/VShop.apk](https://github.com/VShopApp/mobile/releases/latest/download/VShop.apk)
+2. Open the downloaded file on your Android device
+3. If prompted, allow installation from unknown sources in your device settings
+4. Follow the on-screen prompts to complete installation
+
+<Note>
+  The APK is built for Android only. For iOS, you must build from source.
+</Note>
+
+## Build from source
+
+Building from source supports both Android and iOS. You will need the following installed before you begin:
+
+- [Node.js](https://nodejs.org) (v18 or later recommended)
+- [pnpm](https://pnpm.io) v9
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (`npm install -g expo-cli`)
+- For Android: Android Studio with the Android SDK configured
+- For iOS: Xcode (macOS only)
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/VShopApp/mobile.git
+    cd mobile
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    <CodeGroup>
+
+    ```bash pnpm
+    pnpm install
+    ```
+
+    ```bash npm
+    npm install
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Configure environment variables">
+    Copy the example environment file and fill in the required values:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    ```ini .env
+    EXPO_PUBLIC_API_URL=
+
+    # Optional
+    EXPO_PUBLIC_STRIPE_PUBLIC_KEY=
+    EXPO_PUBLIC_PLAUSIBLE_URL=
+    EXPO_PUBLIC_PLAUSIBLE_DOMAIN=
+    ```
+
+    `EXPO_PUBLIC_API_URL` is required. The optional keys enable Stripe payments and Plausible analytics if you are running your own VShop API instance.
+  </Step>
+
+  <Step title="Run the app">
+    Use the scripts from `package.json` to launch the app on your target platform:
+
+    <CodeGroup>
+
+    ```bash Android
+    pnpm android
+    ```
+
+    ```bash iOS
+    pnpm ios
+    ```
+
+    ```bash Expo dev server
+    pnpm start
+    ```
+
+    </CodeGroup>
+
+    `pnpm android` runs `expo run:android` and `pnpm ios` runs `expo run:ios`. Both commands build a native binary and launch it on a connected device or emulator. `pnpm start` starts the Expo development server without building a native binary.
+  </Step>
+</Steps>

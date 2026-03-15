@@ -1,0 +1,119 @@
+---
+title: "VShop API"
+description: "Functions for the VShop backend API (donations, currency info)"
+---
+
+This module wraps the VShop backend REST API. It handles donator verification and Stripe-based payment flows.
+
+<Note>
+The backend base URL is configured via the `EXPO_PUBLIC_API_URL` environment variable. Set this in your `.env` file before building.
+</Note>
+
+## Configuration
+
+| Variable | Description |
+|---|---|
+| `EXPO_PUBLIC_API_URL` | Base URL for the VShop backend API (e.g. `https://api.vshop.example.com`). |
+
+---
+
+## Functions
+
+### `checkDonator`
+
+Checks whether a given Riot user ID is registered as a donator in the VShop backend.
+
+```typescript
+checkDonator(riotId: string): Promise<boolean>
+```
+
+**Endpoint:** `GET {EXPO_PUBLIC_API_URL}/user/{riotId}`
+
+<ParamField path="riotId" type="string" required>
+  The player's Riot user UUID (obtained from `getUserId`).
+</ParamField>
+
+<ResponseField name="returns" type="Promise<boolean>">
+  `true` if the user is a donator, `false` otherwise. Errors are caught internally and also return `false`.
+</ResponseField>
+
+<Note>
+This function has a 5-second timeout. If the backend is unreachable, it silently returns `false` rather than throwing. Background wishlist checks depend on this function — non-donators are skipped entirely.
+</Note>
+
+---
+
+### `getCurrencies`
+
+Fetches the list of supported currencies for the donation payment flow.
+
+```typescript
+getCurrencies(): Promise<ICurrency[]>
+```
+
+**Endpoint:** `GET {EXPO_PUBLIC_API_URL}/stripe/currencies`
+
+<ResponseField name="returns" type="Promise<ICurrency[]>">
+  Array of supported currency objects.
+  <Expandable title="ICurrency properties">
+    <ResponseField name="code" type="string">ISO 4217 currency code (e.g. `"usd"`, `"eur"`).</ResponseField>
+    <ResponseField name="symbol" type="string">Currency symbol for display (e.g. `"$"`, `"€"`).</ResponseField>
+    <ResponseField name="minimum" type="number">Minimum donation amount in the currency's base unit.</ResponseField>
+    <ResponseField name="zeroDecimal" type="boolean">Whether the currency has no minor units (e.g. JPY). When `true`, amounts are treated as whole units.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+### `generatePaymentSheet`
+
+Creates a Stripe payment sheet for a donation. The backend creates a PaymentIntent and returns the parameters needed to present the Stripe payment sheet on the client.
+
+```typescript
+generatePaymentSheet(params: {
+  amount: number;
+  riotId: string;
+  currencyCode: string;
+}): Promise<AxiosResponse>
+```
+
+**Endpoint:** `POST {EXPO_PUBLIC_API_URL}/stripe/payment-sheet`
+
+<ParamField path="amount" type="number" required>
+  Donation amount. For non-zero-decimal currencies this is in the smallest currency unit (e.g. cents for USD). Check the `zeroDecimal` field from `getCurrencies` to determine whether to multiply by 100.
+</ParamField>
+
+<ParamField path="riotId" type="string" required>
+  The player's Riot user UUID. The backend associates the donation with this account.
+</ParamField>
+
+<ParamField path="currencyCode" type="string" required>
+  ISO 4217 currency code matching one of the codes returned by `getCurrencies` (e.g. `"usd"`).
+</ParamField>
+
+<ResponseField name="returns" type="Promise<AxiosResponse>">
+  Raw Axios response. The `data` property contains the Stripe payment sheet parameters required by `@stripe/stripe-react-native`'s `initPaymentSheet`.
+</ResponseField>
+
+---
+
+## Code example
+
+```typescript
+import { checkDonator, getCurrencies, generatePaymentSheet } from '~/utils/vshop-api';
+
+// Check donator status
+const isDonator = await checkDonator(userId);
+
+// Fetch available currencies for the donation UI
+const currencies = await getCurrencies();
+
+// Generate a payment sheet for a $5.00 USD donation
+const res = await generatePaymentSheet({
+  amount: 500, // 500 cents = $5.00
+  riotId: userId,
+  currencyCode: 'usd',
+});
+
+// Pass res.data to @stripe/stripe-react-native initPaymentSheet
+```

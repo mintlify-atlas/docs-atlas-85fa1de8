@@ -1,0 +1,40 @@
+---
+title: "Night Market"
+description: "Browse discounted weapon skins during Valorant's limited-time Night Market event."
+---
+
+The Night Market is a limited-time Valorant event where you receive a personal set of discounted weapon skin offers. Your Night Market offers are unique to your account — they differ from other players.
+
+<Warning>
+Night Market availability is controlled entirely by Riot Games. VShop can only display Night Market offers when Riot has activated the event on your account. If you see an empty Night Market screen, the event is not currently active.
+</Warning>
+
+## What you see
+
+When the Night Market is active, each offer card shows:
+
+- **Skin name**
+- **Original price** — displayed with a strikethrough to show the full VP cost
+- **Discounted price** — the reduced VP cost you pay
+- **Discount percentage** — shown in green (e.g. `-40%`)
+- **Skin artwork**
+- **Levels and Chromas buttons** — tap to preview upgrade levels and color variants
+
+A countdown timer at the top of the screen shows how long the Night Market remains active.
+
+## When Night Market is unavailable
+
+If the Night Market is not currently running, the screen displays an empty state with a message indicating no Night Market is available. There is nothing to configure in VShop to change this — you must wait for Riot to activate the next Night Market event.
+
+## Data source
+
+Night Market data comes from the `BonusStore.BonusStoreOffers` field in the Riot storefront API response. VShop only renders Night Market items when the `BonusStore` field is present in the response. The expiry timer is sourced from `BonusStoreRemainingDurationInSeconds`.
+
+<CardGroup cols={2}>
+  <Card title="Daily Shop" icon="store" href="/features/shop">
+    View your 4 daily rotating skin offers.
+  </Card>
+  <Card title="Featured Bundles" icon="package" href="/features/bundles">
+    Browse the current featured weapon skin bundles.
+  </Card>
+</CardGroup>

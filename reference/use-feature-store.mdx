@@ -1,0 +1,96 @@
+---
+title: "useFeatureStore"
+description: "Zustand store for feature flags and UI preferences"
+---
+
+`useFeatureStore` is a [Zustand](https://github.com/pmndrs/zustand) store that holds runtime feature flags and UI mode preferences. It is not persisted — values reset to their defaults on every app session.
+
+## Interface
+
+```typescript
+interface FeatureState {
+  isDonator: boolean;
+  enableDonator: () => void;
+  disableDonator: () => void;
+  screenshotModeEnabled: boolean;
+  toggleScreenshotMode: () => void;
+}
+```
+
+## State
+
+<ResponseField name="isDonator" type="boolean" required>
+  Whether the current user has donator status. Defaults to `false`.
+
+  When `true`, donator-exclusive features (such as wishlist background notifications) are unlocked. This flag is set at runtime after verifying a donation — it is never persisted to storage.
+</ResponseField>
+
+<ResponseField name="screenshotModeEnabled" type="boolean" required>
+  Whether screenshot mode is active. Defaults to `false`.
+
+  Only available in development builds (`__DEV__`). When enabled, the UI adjusts to produce clean screenshots (e.g. hiding sensitive data).
+</ResponseField>
+
+## Actions
+
+<ParamField path="enableDonator" type="() => void">
+  Sets `isDonator` to `true`. Call this after confirming donator status with the backend.
+</ParamField>
+
+<ParamField path="disableDonator" type="() => void">
+  Sets `isDonator` to `false`.
+</ParamField>
+
+<ParamField path="toggleScreenshotMode" type="() => void">
+  Flips `screenshotModeEnabled` between `true` and `false`.
+</ParamField>
+
+## Usage examples
+
+### Reading feature flags (settings.tsx)
+
+```typescript
+import { useFeatureStore } from "~/hooks/useFeatureStore";
+
+function Settings() {
+  const { isDonator, screenshotModeEnabled, toggleScreenshotMode } =
+    useFeatureStore();
+
+  // Gate donator-only features
+  const toggleNotificationEnabled = async () => {
+    if (isDonator) {
+      // proceed with notification setup
+    } else {
+      showDonatePopup();
+    }
+  };
+
+  // ...
+}
+```
+
+### Screenshot mode toggle in dev builds (settings.tsx)
+
+```typescript
+{__DEV__ && (
+  <TouchableRipple onPress={toggleScreenshotMode}>
+    <List.Item
+      title={t("screenshot_mode")}
+      right={() => (
+        <Checkbox
+          status={screenshotModeEnabled ? "checked" : "unchecked"}
+          onPress={toggleScreenshotMode}
+        />
+      )}
+    />
+  </TouchableRipple>
+)}
+```
+
+<Note>
+  `useFeatureStore` is not persisted. `isDonator` defaults to `false` on every cold start and must be re-verified each session.
+</Note>
+
+<Warning>
+  `screenshotModeEnabled` is intended for development use only. Production builds should not expose a toggle for this flag.
+</Warning>

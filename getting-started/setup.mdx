@@ -1,0 +1,60 @@
+---
+title: 'First-time setup'
+description: 'Walk through the one-time setup flow: choose your region, sign in with your Riot account, and let VShop load your shop data.'
+---
+
+The first time you open VShop, a setup wizard guides you through region selection and authentication. This process runs entirely on your device.
+
+<Steps>
+  <Step title="Launch the app">
+    Open VShop on your device. The welcome screen displays a preview of the app with a brief overview of its features. Tap **Next** to continue.
+  </Step>
+
+  <Step title="Select your region">
+    Choose the region that matches your Riot account. VShop uses this to route API requests to the correct Valorant servers.
+
+    | Region | Code |
+    | --- | --- |
+    | Europe | `EU` |
+    | North America | `NA` |
+    | Asia Pacific | `AP` |
+    | Korea | `KR` |
+
+    <Warning>
+      Selecting the wrong region will cause shop data to fail to load. Make sure the region matches the one your Riot account was created in.
+    </Warning>
+
+    Tap **Next** after selecting your region.
+  </Step>
+
+  <Step title="Sign in with your Riot account">
+    A Riot OAuth login page loads in an embedded WebView. Enter your Riot Games username and password to authenticate.
+
+    <Note>
+      Your credentials are transmitted directly from your device to `auth.riotgames.com`. VShop does not have access to your password and does not route your credentials through any third-party server.
+    </Note>
+
+    Complete any multi-factor authentication steps if your account has them enabled.
+  </Step>
+
+  <Step title="Wait for shop data to load">
+    After a successful login, VShop automatically fetches your account data in sequence:
+
+    - Game assets (skin images, icons)
+    - Entitlements token
+    - User ID and display name
+    - Storefront (daily shop offers)
+    - Battle pass progress
+    - Currency balances (Valorant Points, Radianite Points, Kingdom Credits)
+
+    A loading indicator displays the current fetch step. This typically completes in a few seconds depending on your connection.
+  </Step>
+
+  <Step title="View your shop">
+    Once all data has loaded, VShop opens directly to your shop. Your daily offers, Night Market (when active), bundles, and accessories are all available from the navigation drawer.
+  </Step>
+</Steps>
+
+## After login
+
+VShop caches your session on-device. On subsequent launches the app skips the setup wizard and loads your shop directly, refreshing data in the background. If your session expires you will be prompted to sign in again.

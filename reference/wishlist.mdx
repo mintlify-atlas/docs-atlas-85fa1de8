@@ -1,0 +1,139 @@
+---
+title: "Wishlist"
+description: "Background task and notification functions for wishlist monitoring"
+---
+
+This module implements the wishlist monitoring feature. It registers a background task that periodically re-authenticates, fetches the player's daily shop, and sends a local push notification if any wishlisted skin is in the shop.
+
+<Warning>
+Background fetch is only supported on Android. The `react-native-background-fetch` library will not execute the registered task on iOS in the same way — configure `enableHeadless` and `startOnBoot` are Android-only options.
+</Warning>
+
+---
+
+## Functions
+
+### `checkShop`
+
+The core wishlist check. Re-authenticates silently, fetches the current daily shop, and compares each item against the provided wishlist. Sends a local push notification for each match, or a single "no match" notification if none are found.
+
+```typescript
+checkShop(wishlist: string[]): Promise<void>
+```
+
+<ParamField path="wishlist" type="string[]" required>
+  Array of skin level UUIDs to check against the current shop's `SingleItemOffers`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<void>">
+  Resolves when all notifications have been scheduled. Does not return a value.
+</ResponseField>
+
+**Donator gate:** Before fetching the shop, `checkShop` calls `checkDonator` with the authenticated user ID. If the user is not a donator, the function returns immediately without fetching the shop or sending any notification.
+
+**Notification channel:** Notifications are sent on the `"wishlist"` Android channel with `AndroidImportance.MAX`. The channel is created (or updated) each time `checkShop` runs.
+
+**Error handling:** Any error during authentication or shop fetch is caught and results in an error notification being scheduled rather than the function throwing.
+
+<Note>
+The access token is obtained via `reAuth`, which depends on cookies from a previous login session. The region is read from `AsyncStorage` with a fallback to `"eu"`.
+</Note>
+
+---
+
+### `initBackgroundFetch`
+
+Registers and configures the background fetch task using `react-native-background-fetch`. Should be called once when the user enables wishlist notifications.
+
+```typescript
+initBackgroundFetch(): Promise<void>
+```
+
+<ResponseField name="returns" type="Promise<void>">
+  Resolves when BackgroundFetch has been configured.
+</ResponseField>
+
+**BackgroundFetch configuration:**
+
+| Option | Value | Description |
+|---|---|---|
+| `minimumFetchInterval` | `15` | Minimum interval between background fetches, in minutes. |
+| `stopOnTerminate` | `false` | Continue scheduling fetches after the app is terminated. |
+| `enableHeadless` | `true` | Allow the task to run when the app is not in memory (Android). |
+| `startOnBoot` | `true` | Resume scheduling after device reboot (Android). |
+| `forceAlarmManager` | `false` | Use `JobScheduler` rather than `AlarmManager` (Android). |
+| `requiredNetworkType` | `NETWORK_TYPE_ANY` | Run on any available network connection. |
+| `requiresCharging` | `false` | No charging requirement. |
+| `requiresDeviceIdle` | `false` | No idle requirement. |
+| `requiresBatteryNotLow` | `false` | No battery level requirement. |
+| `requiresStorageNotLow` | `false` | No storage requirement. |
+
+The registered task callback calls `wishlistBgTask` and signals completion with `BackgroundFetch.finish(taskId)`. A timeout callback also calls `finish` to prevent the system from penalising the app.
+
+---
+
+### `stopBackgroundFetch`
+
+Stops the background fetch task. Should be called when the user disables wishlist notifications.
+
+```typescript
+stopBackgroundFetch(): Promise<void>
+```
+
+<ResponseField name="returns" type="Promise<void>">
+  Resolves when BackgroundFetch has been stopped.
+</ResponseField>
+
+---
+
+### `wishlistBgTask`
+
+The background task logic. Rehydrates the Zustand wishlist store, checks whether notifications are enabled, and runs `checkShop` at most once per UTC day.
+
+```typescript
+wishlistBgTask(): Promise<void>
+```
+
+<ResponseField name="returns" type="Promise<void>">
+  Resolves when the check is complete (or skipped).
+</ResponseField>
+
+**Deduplication logic:**
+
+1. Rehydrates `useWishlistStore` from AsyncStorage.
+2. If `notificationEnabled` is `false` in the store, returns immediately.
+3. Reads `lastWishlistCheck` timestamp from AsyncStorage.
+4. Compares the stored timestamp with the current time using `isSameDayUTC`.
+5. Only proceeds with `checkShop` if the last check was on a different UTC day (or has never been run).
+6. Stores the current timestamp back to AsyncStorage after a successful check.
+
+This ensures the shop is checked at most once per day regardless of how often the OS wakes the background task.
+
+---
+
+## Notification behavior
+
+| Scenario | Notification body |
+|---|---|
+| One or more wishlist hits | One notification per matching skin, using its `displayName`. |
+| No wishlist hits | Single notification with a "nothing in your wishlist" message. |
+| Auth / fetch error | Single notification with an error message. |
+| User is not a donator | No notification sent. |
+
+---
+
+## Code example
+
+```typescript
+import { initBackgroundFetch, stopBackgroundFetch, checkShop } from '~/utils/wishlist';
+
+// Enable background monitoring when the user toggles notifications on
+await initBackgroundFetch();
+
+// Manually trigger a shop check (e.g. from a "Check now" button)
+const wishlist = ['uuid-of-skin-1', 'uuid-of-skin-2'];
+await checkShop(wishlist);
+
+// Disable background monitoring
+await stopBackgroundFetch();
+```

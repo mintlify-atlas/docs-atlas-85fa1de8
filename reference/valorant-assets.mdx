@@ -1,0 +1,243 @@
+---
+title: "Valorant Assets"
+description: "Functions for fetching and caching game asset data from valorant-api.com"
+---
+
+This module manages game asset data sourced from [valorant-api.com](https://valorant-api.com). Assets are cached to the device filesystem (`expo-file-system` cache directory) and are invalidated whenever the Riot Client version or display language changes.
+
+## Caching mechanism
+
+Assets are stored in a module-level `assets` object and persisted to `{cacheDirectory}/valorant_assets.json`. On startup, `loadAssets` checks whether the cached file is valid for the current game version and locale. If the cache is stale or missing, all asset types are re-fetched and written to disk.
+
+```typescript
+type StoredAssets = {
+  riotClientVersion?: string;
+  language?: string;
+  skins: ValorantSkin[];
+  buddies: ValorantBuddyAccessory[];
+  sprays: ValorantSprayAccessory[];
+  cards: ValorantCardAccessory[];
+  titles: ValorantTitleAccessory[];
+};
+```
+
+<Tip>
+Call `loadAssets` once at app startup before invoking any other function in this module or in `valorant-api.ts`. Subsequent reads use the in-memory `assets` object and are synchronous.
+</Tip>
+
+---
+
+## Functions
+
+### `getAssets`
+
+Returns the current in-memory assets object synchronously. Returns empty arrays if `loadAssets` has not yet been called.
+
+```typescript
+getAssets(): StoredAssets
+```
+
+<ResponseField name="returns" type="StoredAssets">
+  The in-memory cache containing all loaded asset arrays and version metadata.
+</ResponseField>
+
+---
+
+### `loadAssets`
+
+Loads assets from the filesystem cache or fetches fresh data from valorant-api.com if the cache is missing or outdated. Updates the in-memory `assets` object.
+
+```typescript
+loadAssets(): Promise<void>
+```
+
+The function:
+1. Checks whether the cache file exists.
+2. Fetches the current Riot Client version via `fetchVersion`.
+3. Compares cached `riotClientVersion` and `language` against the live values.
+4. If the cache is valid, loads it into memory and returns early.
+5. Otherwise, fetches all asset types in sequence and writes the result to disk.
+
+---
+
+### `fetchVersion`
+
+Fetches the current Riot Client version string from valorant-api.com. This version is used as a cache key and is also required by the `reAuth` function.
+
+```typescript
+fetchVersion(): Promise<string>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/version`
+
+<ResponseField name="returns" type="Promise<string>">
+  The `riotClientVersion` string (e.g. `"43.0.1.4195386.4190634"`).
+</ResponseField>
+
+---
+
+### `fetchSkins`
+
+Fetches all weapon skin data from valorant-api.com.
+
+```typescript
+fetchSkins(language?: string): Promise<ValorantSkin[]>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/weapons/skins?language={language}`
+
+<ParamField path="language" type="string">
+  VAPI language code (e.g. `"en-US"`, `"de-DE"`). Defaults to the value returned by `getVAPILang()`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ValorantSkin[]>">
+  Array of skin objects including chromas, levels, display icons, and content tier UUIDs.
+</ResponseField>
+
+---
+
+### `fetchBuddies`
+
+Fetches all gun buddy data from valorant-api.com.
+
+```typescript
+fetchBuddies(language?: string): Promise<ValorantBuddyAccessory[]>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/buddies?language={language}`
+
+<ParamField path="language" type="string">
+  VAPI language code. Defaults to `getVAPILang()`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ValorantBuddyAccessory[]>">
+  Array of buddy objects including display name, icon, and level data.
+</ResponseField>
+
+---
+
+### `fetchSprays`
+
+Fetches all spray data from valorant-api.com.
+
+```typescript
+fetchSprays(language?: string): Promise<ValorantSprayAccessory[]>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/sprays?language={language}`
+
+<ParamField path="language" type="string">
+  VAPI language code. Defaults to `getVAPILang()`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ValorantSprayAccessory[]>">
+  Array of spray objects including full icon, animated PNG/GIF, and level data.
+</ResponseField>
+
+---
+
+### `fetchPlayerCards`
+
+Fetches all player card data from valorant-api.com.
+
+```typescript
+fetchPlayerCards(language?: string): Promise<ValorantCardAccessory[]>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/playercards?language={language}`
+
+<ParamField path="language" type="string">
+  VAPI language code. Defaults to `getVAPILang()`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ValorantCardAccessory[]>">
+  Array of player card objects including small, wide, and large art variants.
+</ResponseField>
+
+---
+
+### `fetchPlayerTitles`
+
+Fetches all player title data from valorant-api.com.
+
+```typescript
+fetchPlayerTitles(language?: string): Promise<ValorantTitleAccessory[]>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/playertitles?language={language}`
+
+<ParamField path="language" type="string">
+  VAPI language code. Defaults to `getVAPILang()`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ValorantTitleAccessory[]>">
+  Array of title objects including `titleText` (the in-game display string).
+</ResponseField>
+
+---
+
+### `fetchBundle`
+
+Fetches metadata for a single content bundle by its UUID. Returns `null` if the bundle is not found (HTTP status other than 200).
+
+```typescript
+fetchBundle(bundleId: string, language?: string): Promise<ValorantBundle | null>
+```
+
+**Endpoint:** `GET https://valorant-api.com/v1/bundles/{bundleId}?language={language}`
+
+<ParamField path="bundleId" type="string" required>
+  The bundle's `DataAssetID` UUID from the storefront response.
+</ParamField>
+
+<ParamField path="language" type="string">
+  VAPI language code. Defaults to `getVAPILang()`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ValorantBundle | null>">
+  Bundle metadata on success, or `null` if the bundle does not exist in the API.
+  <Expandable title="ValorantBundle properties">
+    <ResponseField name="uuid" type="string">Bundle UUID.</ResponseField>
+    <ResponseField name="displayName" type="string">Bundle name shown in-game.</ResponseField>
+    <ResponseField name="description" type="string">Bundle description text.</ResponseField>
+    <ResponseField name="displayIcon" type="string">Primary bundle icon URL.</ResponseField>
+    <ResponseField name="displayIcon2" type="string">Secondary bundle icon URL.</ResponseField>
+    <ResponseField name="verticalPromoImage" type="string">Vertical promotional image URL.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Asset types
+
+| Asset type | Fetch function | Key fields |
+|---|---|---|
+| Weapon skins | `fetchSkins` | `levels[0].uuid`, `levels[0].displayIcon`, `contentTierUuid` |
+| Gun buddies | `fetchBuddies` | `levels[0].uuid`, `levels[0].displayIcon` |
+| Player cards | `fetchPlayerCards` | `uuid`, `smallArt`, `wideArt`, `largeArt` |
+| Sprays | `fetchSprays` | `uuid`, `fullTransparentIcon`, `animationGif` |
+| Player titles | `fetchPlayerTitles` | `uuid`, `titleText` |
+| Bundles | `fetchBundle` | `uuid`, `displayName`, `displayIcon`, `verticalPromoImage` |
+
+---
+
+## Code example
+
+```typescript
+import { loadAssets, getAssets, fetchBundle, fetchVersion } from '~/utils/valorant-assets';
+
+// Load all assets at app startup
+await loadAssets();
+
+// Access cached assets synchronously afterwards
+const { skins, buddies, cards, sprays, titles } = getAssets();
+
+const phantom = skins.find(s => s.displayName.includes('Phantom'));
+console.log(phantom?.levels[0].displayIcon);
+
+// Fetch a specific bundle by its DataAssetID
+const bundle = await fetchBundle('3e3c4e29-4eba-4a1b-8d55-4b1e3f9c5e2a');
+if (bundle) {
+  console.log(bundle.displayName, bundle.verticalPromoImage);
+}
+```

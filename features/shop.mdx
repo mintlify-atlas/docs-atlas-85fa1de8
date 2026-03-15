@@ -1,0 +1,42 @@
+---
+title: 'Daily Shop'
+description: 'View your 4 rotating daily skin offers, complete with VP pricing, countdown timer, and wishlist integration.'
+keywords: ['shop', 'daily shop', 'skins', 'valorant points', 'VP', 'wishlist']
+---
+
+The Daily Shop shows the 4 weapon skins currently available for purchase in your Valorant account. The shop rotates every day, so VShop displays a live countdown timer so you always know when the next refresh is.
+
+## What you see
+
+Each skin offer shows:
+
+- **Skin name** — with a star prefix (`⭐`) if the skin is on your wishlist
+- **VP price** — the cost in Valorant Points
+- **Skin artwork** — the display icon or full render of the skin
+- **Levels button** — tap to preview all upgrade levels (video or icon)
+- **Chromas button** — tap to preview all color variants (video or full render)
+
+A countdown timer in the top-right corner shows exactly how long remains until the shop resets (formatted as `HH:MM:SS`, or `D:HH:MM:SS` when more than 24 hours remain).
+
+## Data source
+
+Shop data comes from Riot's storefront API. The 4 daily offers are sourced from the `SkinsPanelLayout.SingleItemStoreOffers` field of the storefront response. The reset timer is derived from `SingleItemOffersRemainingDurationInSeconds`.
+
+## Wishlist integration
+
+If you have added a skin to your wishlist, it appears at the top of its card with a star (`⭐`) next to the name, making it easy to spot at a glance when a wishlisted skin is in your daily rotation.
+
+To add or remove a skin from your wishlist, go to the [Wishlist](/features/wishlist) screen and manage your skins there.
+
+<Tip>
+If you enable wishlist notifications, VShop will alert you automatically when a wishlisted skin appears in your daily shop — no need to check manually.
+</Tip>
+
+<CardGroup cols={2}>
+  <Card title="Wishlist & Notifications" icon="bell" href="/features/wishlist">
+    Add skins to your wishlist and get notified when they appear in the shop.
+  </Card>
+  <Card title="Night Market" icon="moon" href="/features/night-market">
+    View discounted skins available during the limited-time Night Market.
+  </Card>
+</CardGroup>

@@ -1,0 +1,351 @@
+---
+title: "Valorant API"
+description: "Functions for authenticating with and querying Riot Games' official APIs"
+---
+
+This module handles all communication with Riot Games' private PVP.net endpoints. It requires a valid access token obtained through the re-authentication flow, plus an entitlements token and user ID derived from it.
+
+<Note>
+All functions send `X-Riot-ClientVersion` and `X-Riot-ClientPlatform` headers automatically. The client version is read from the cached assets; a hardcoded fallback is used if assets have not yet loaded.
+</Note>
+
+## Functions
+
+### `getEntitlementsToken`
+
+Exchanges a Riot access token for an entitlements JWT required by most PVP.net endpoints.
+
+```typescript
+getEntitlementsToken(accessToken: string): Promise<string>
+```
+
+**Endpoint:** `POST https://entitlements.auth.riotgames.com/api/token/v1/`
+
+<ParamField path="accessToken" type="string" required>
+  The Riot access token obtained from the OAuth authorization flow.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<string>">
+  The entitlements JWT string.
+</ResponseField>
+
+---
+
+### `getUserId`
+
+Decodes a Riot access token (JWT) and returns the player's UUID (the `sub` claim).
+
+```typescript
+getUserId(accessToken: string): string
+```
+
+<ParamField path="accessToken" type="string" required>
+  A valid Riot access token. This token is decoded locally — no network request is made.
+</ParamField>
+
+<ResponseField name="returns" type="string">
+  The player's UUID (`sub` claim from the JWT payload).
+</ResponseField>
+
+---
+
+### `getUsername`
+
+Fetches the in-game display name (GameName) for a player.
+
+```typescript
+getUsername(
+  accessToken: string,
+  entitlementsToken: string,
+  userId: string,
+  region: string
+): Promise<string>
+```
+
+**Endpoint:** `PUT https://pd.{region}.a.pvp.net/name-service/v2/players`
+
+<ParamField path="accessToken" type="string" required>
+  Riot access token.
+</ParamField>
+
+<ParamField path="entitlementsToken" type="string" required>
+  Entitlements JWT from `getEntitlementsToken`.
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  Player UUID from `getUserId`.
+</ParamField>
+
+<ParamField path="region" type="string" required>
+  Region code (e.g. `"eu"`, `"na"`, `"ap"`, `"kr"`).
+</ParamField>
+
+<ResponseField name="returns" type="Promise<string>">
+  The player's GameName, or `"?"` if the name is not available.
+</ResponseField>
+
+---
+
+### `getShop`
+
+Fetches the raw storefront data for a player from the PVP.net store endpoint.
+
+```typescript
+getShop(
+  accessToken: string,
+  entitlementsToken: string,
+  region: string,
+  userId: string
+): Promise<StorefrontResponse>
+```
+
+**Endpoint:** `POST https://pd.{region}.a.pvp.net/store/v3/storefront/{userId}`
+
+<ParamField path="accessToken" type="string" required>
+  Riot access token.
+</ParamField>
+
+<ParamField path="entitlementsToken" type="string" required>
+  Entitlements JWT.
+</ParamField>
+
+<ParamField path="region" type="string" required>
+  Region code (e.g. `"eu"`, `"na"`, `"ap"`, `"kr"`).
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  Player UUID.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<StorefrontResponse>">
+  Raw storefront payload from the Riot API.
+  <Expandable title="StorefrontResponse properties">
+    <ResponseField name="SkinsPanelLayout" type="object">
+      The daily rotating weapon skin offers.
+      <Expandable title="properties">
+        <ResponseField name="SingleItemOffers" type="string[]">
+          Array of skin level UUIDs currently on offer.
+        </ResponseField>
+        <ResponseField name="SingleItemStoreOffers" type="object[]">
+          Full offer objects including price and start date.
+        </ResponseField>
+        <ResponseField name="SingleItemOffersRemainingDurationInSeconds" type="number">
+          Seconds until the daily shop refreshes.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="FeaturedBundle" type="object">
+      Currently featured bundle(s).
+    </ResponseField>
+    <ResponseField name="AccessoryStore" type="object">
+      Kingdom Credits accessory offers (buddies, cards, sprays, titles).
+    </ResponseField>
+    <ResponseField name="BonusStore" type="object | undefined">
+      Night Market offers. Only present when the Night Market is active.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+### `parseShop`
+
+Transforms a raw `StorefrontResponse` into a structured `ParsedShop` object, resolving asset names and icons from the local asset cache.
+
+```typescript
+parseShop(shop: StorefrontResponse): Promise<ParsedShop>
+```
+
+<ParamField path="shop" type="StorefrontResponse" required>
+  Raw storefront response from `getShop`.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<ParsedShop>">
+  <Expandable title="ParsedShop properties">
+    <ResponseField name="main" type="SkinShopItem[]">
+      Up to 4 daily skin offers with display names, icons, and VP prices.
+    </ResponseField>
+    <ResponseField name="bundles" type="BundleShopItem[]">
+      Featured bundles with full asset metadata fetched from valorant-api.com.
+    </ResponseField>
+    <ResponseField name="nightMarket" type="NightMarketItem[]">
+      Night Market offers including original price, discounted price, and discount percentage. Empty array when Night Market is inactive.
+    </ResponseField>
+    <ResponseField name="accessory" type="AccessoryShopItem[]">
+      Accessory store items (buddies, player cards, sprays, titles) priced in Kingdom Credits.
+    </ResponseField>
+    <ResponseField name="remainingSecs" type="object">
+      Time-to-refresh counters for each store section.
+      <Expandable title="properties">
+        <ResponseField name="main" type="number">Seconds until daily shop refreshes.</ResponseField>
+        <ResponseField name="bundles" type="number[]">Seconds until each featured bundle expires.</ResponseField>
+        <ResponseField name="nightMarket" type="number">Seconds until Night Market ends.</ResponseField>
+        <ResponseField name="accessory" type="number">Seconds until accessory store refreshes.</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+`parseShop` calls `fetchBundle` for each featured bundle, which makes a network request to `valorant-api.com`. Ensure assets are loaded via `loadAssets` before calling this function.
+</Note>
+
+---
+
+### `getBalances`
+
+Fetches the player's current currency balances.
+
+```typescript
+getBalances(
+  accessToken: string,
+  entitlementsToken: string,
+  region: string,
+  userId: string
+): Promise<Balances>
+```
+
+**Endpoint:** `GET https://pd.{region}.a.pvp.net/store/v1/wallet/{userId}`
+
+<ParamField path="accessToken" type="string" required>
+  Riot access token.
+</ParamField>
+
+<ParamField path="entitlementsToken" type="string" required>
+  Entitlements JWT.
+</ParamField>
+
+<ParamField path="region" type="string" required>
+  Region code.
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  Player UUID.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<Balances>">
+  <Expandable title="Balances properties">
+    <ResponseField name="vp" type="number">Valorant Points balance.</ResponseField>
+    <ResponseField name="rad" type="number">Radianite Points balance.</ResponseField>
+    <ResponseField name="fag" type="number">Free Agent currency balance.</ResponseField>
+    <ResponseField name="kc" type="number">Kingdom Credits balance.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+### `getProgress`
+
+Fetches the player's account level and XP.
+
+```typescript
+getProgress(
+  accessToken: string,
+  entitlementsToken: string,
+  region: string,
+  userId: string
+): Promise<Progress>
+```
+
+**Endpoint:** `GET https://pd.{region}.a.pvp.net/account-xp/v1/players/{userId}`
+
+<ParamField path="accessToken" type="string" required>
+  Riot access token.
+</ParamField>
+
+<ParamField path="entitlementsToken" type="string" required>
+  Entitlements JWT.
+</ParamField>
+
+<ParamField path="region" type="string" required>
+  Region code.
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  Player UUID.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<Progress>">
+  <Expandable title="Progress properties">
+    <ResponseField name="level" type="number">Current account level.</ResponseField>
+    <ResponseField name="xp" type="number">XP earned toward the next level.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+### `reAuth`
+
+Initiates a Riot SSO re-authentication request. Uses the stored browser cookies to silently obtain a new access token URI. This is the entry point for the automatic login flow.
+
+```typescript
+reAuth(version: string): Promise<AxiosResponse>
+```
+
+**Endpoint:** `POST https://auth.riotgames.com/api/v1/authorization`
+
+<ParamField path="version" type="string" required>
+  The current Riot Client version string (e.g. `"43.0.1.4195386.4190634"`). Fetched via `fetchVersion` from the assets module. This is sent in the `User-Agent` header.
+</ParamField>
+
+<ResponseField name="returns" type="Promise<AxiosResponse>">
+  Axios response whose `data.response.parameters.uri` contains the redirect URI with the new access token embedded as a query parameter. Use `getAccessTokenFromUri` from `misc.ts` to extract it.
+</ResponseField>
+
+<Warning>
+`reAuth` configures a custom TLS cipher suite and requires `withCredentials: true`. It depends on cookies being present from a previous successful login. On platforms where cookies are not persisted, this will fail.
+</Warning>
+
+---
+
+## Endpoint reference
+
+| Function | Method | Endpoint |
+|---|---|---|
+| `reAuth` | POST | `https://auth.riotgames.com/api/v1/authorization` |
+| `getEntitlementsToken` | POST | `https://entitlements.auth.riotgames.com/api/token/v1/` |
+| `getUsername` | PUT | `https://pd.{region}.a.pvp.net/name-service/v2/players` |
+| `getShop` | POST | `https://pd.{region}.a.pvp.net/store/v3/storefront/{userId}` |
+| `getBalances` | GET | `https://pd.{region}.a.pvp.net/store/v1/wallet/{userId}` |
+| `getProgress` | GET | `https://pd.{region}.a.pvp.net/account-xp/v1/players/{userId}` |
+
+---
+
+## Code example
+
+A typical flow to authenticate and load shop data:
+
+```typescript
+import { reAuth, getEntitlementsToken, getUserId, getShop, parseShop, getBalances } from '~/utils/valorant-api';
+import { getAccessTokenFromUri } from '~/utils/misc';
+import { fetchVersion, loadAssets } from '~/utils/valorant-assets';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+async function loadUserShop() {
+  // 1. Ensure assets are loaded and get current client version
+  await loadAssets();
+  const version = await fetchVersion();
+
+  // 2. Re-authenticate using stored cookies
+  const authRes = await reAuth(version);
+  const accessToken = getAccessTokenFromUri(authRes.data.response.parameters.uri);
+
+  // 3. Derive user ID from the access token (no network request)
+  const userId = getUserId(accessToken);
+
+  // 4. Exchange access token for an entitlements token
+  const entitlementsToken = await getEntitlementsToken(accessToken);
+
+  // 5. Read region from storage
+  const region = (await AsyncStorage.getItem('region')) || 'eu';
+
+  // 6. Fetch and parse the shop
+  const rawShop = await getShop(accessToken, entitlementsToken, region, userId);
+  const shop = await parseShop(rawShop);
+
+  // 7. Optionally fetch balances and level
+  const balances = await getBalances(accessToken, entitlementsToken, region, userId);
+
+  return { shop, balances };
+}
+```
